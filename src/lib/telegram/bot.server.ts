@@ -674,7 +674,7 @@ export async function handleUpdate(update: any) {
         await sendMessage(chatId, T[lang].step5);
         return;
       }
-      const membership = await channelMembership(settings.channelUrl, cb.from?.id);
+      const membership = await channelMembership(settings, cb.from?.id);
       if (membership === "unavailable") {
         await answerCallback(cb.id, T[lang].membershipUnavailable, true);
         await sendMessage(chatId, T[lang].membershipUnavailableMsg, [
