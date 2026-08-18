@@ -12,6 +12,13 @@ import {
   updateBotSettings,
   type BotSettings,
 } from "./settings.server";
+import {
+  OWNER_TELEGRAM_ID,
+  addAdmin,
+  isAdminUser as isAdmin,
+  listAdmins,
+  removeAdmin,
+} from "./admins.server";
 
 
 const API = "https://api.telegram.org";
