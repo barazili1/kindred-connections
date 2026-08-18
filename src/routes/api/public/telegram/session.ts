@@ -7,6 +7,14 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/api/public/telegram/session")({
   server: {
     handlers: {
+      OPTIONS: async () =>
+        new Response(null, {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+          },
+        }),
       POST: async ({ request }) => {
         let out: { ok: boolean; token?: string | undefined; userId?: string | undefined } = { ok: false };
         try {
@@ -22,7 +30,9 @@ export const Route = createFileRoute("/api/public/telegram/session")({
           out = { ok: false };
         }
         return new Response(JSON.stringify(out), {
-          headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+          headers: { "Content-Type": "application/json",
+            "Cache-Control": "no-store",
+            "Access-Control-Allow-Origin": "*" },
         });
       },
     },
