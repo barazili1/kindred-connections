@@ -363,6 +363,7 @@ async function sendVerified(chatId: number, lang: Lang, settings: BotSettings, i
 
 type EditableField =
   | "channel_url"
+  | "channel_chat_id"
   | "support_url"
   | "platform_1_url"
   | "platform_2_url"
@@ -375,6 +376,7 @@ type EditableField =
 
 const FIELD_LABEL: Record<EditableField, string> = {
   channel_url: "رابط قناة التليجرام",
+  channel_chat_id: "معرّف القناة (-100…) أو @اسم_القناة",
   support_url: "رابط الدعم",
   platform_1_url: `رابط تحميل ${PLATFORMS.p1.name}`,
   platform_2_url: `رابط تحميل ${PLATFORMS.p2.name}`,
@@ -386,19 +388,24 @@ const FIELD_LABEL: Record<EditableField, string> = {
   remove_admin: "حذف أدمن (ID تليجرام)",
 };
 
+function platformLine(pk: PlatformKey, url: string, on: boolean) {
+  return `${on ? "🟢" : "⛔️"} ${PLATFORMS[pk].name}: ${escape(url)}`;
+}
+
 function adminPanel(settings: BotSettings, admins: { id: number; label: string | null }[]) {
   const status = settings.enabled ? "🟢 يعمل" : "🔴 متوقف";
   return (
     `👑 <b>لوحة تحكم ${BOT_NAME}</b>\n${RULE}\n` +
     `الحالة: <b>${status}</b>\n\n` +
     `📢 القناة: ${escape(settings.channelUrl)}\n` +
+    `🆔 معرّف القناة: <code>${escape(settings.channelChatId ?? "غير مضبوط")}</code>\n` +
     `🛠 الدعم: ${escape(settings.supportUrl)}\n` +
     `🎁 البروموكود: <code>${escape(settings.promoCode)}</code>\n` +
     `🌐 التطبيق: ${escape(settings.appBaseUrl ?? "الافتراضي")}\n\n` +
-    `${PLATFORMS.p1.name}: ${escape(settings.platform1Url)}\n` +
-    `${PLATFORMS.p2.name}: ${escape(settings.platform2Url)}\n` +
-    `${PLATFORMS.p3.name}: ${escape(settings.platform3Url)}\n` +
-    `${PLATFORMS.p4.name}: ${escape(settings.platform4Url)}\n\n` +
+    `${platformLine("p1", settings.platform1Url, settings.platformEnabled.p1)}\n` +
+    `${platformLine("p2", settings.platform2Url, settings.platformEnabled.p2)}\n` +
+    `${platformLine("p3", settings.platform3Url, settings.platformEnabled.p3)}\n` +
+    `${platformLine("p4", settings.platform4Url, settings.platformEnabled.p4)}\n\n` +
     `👥 الأدمن: ${admins.map((a) => `<code>${a.id}</code>`).join(" · ")}\n` +
     `${RULE}\nاختر ما تريد تعديله:`
   );
@@ -406,6 +413,10 @@ function adminPanel(settings: BotSettings, admins: { id: number; label: string |
 
 async function sendAdminPanel(chatId: number, settings: BotSettings) {
   const admins = await listAdmins();
+  const toggle = (pk: PlatformKey) => ({
+    text: `${settings.platformEnabled[pk] ? "🟢" : "⛔️"} ${PLATFORMS[pk].name}`,
+    callback_data: `admin:toggle:${pk}`,
+  });
   await sendMessage(
     chatId,
     adminPanel(settings, admins),
@@ -416,20 +427,23 @@ async function sendAdminPanel(chatId: number, settings: BotSettings) {
       ],
       [
         { text: "📢 القناة", callback_data: "admin:edit:channel_url" },
+        { text: "🆔 معرّف القناة", callback_data: "admin:edit:channel_chat_id" },
+      ],
+      [
         { text: "🛠 الدعم", callback_data: "admin:edit:support_url" },
-      ],
-      [
         { text: "🎁 البروموكود", callback_data: "admin:edit:promo_code" },
-        { text: "🌐 التطبيق", callback_data: "admin:edit:app_base_url" },
+      ],
+      [{ text: "🌐 التطبيق", callback_data: "admin:edit:app_base_url" }],
+      [
+        { text: `✏️ ${PLATFORMS.p1.name}`, callback_data: "admin:edit:platform_1_url" },
+        { text: `✏️ ${PLATFORMS.p2.name}`, callback_data: "admin:edit:platform_2_url" },
       ],
       [
-        { text: PLATFORMS.p1.name, callback_data: "admin:edit:platform_1_url" },
-        { text: PLATFORMS.p2.name, callback_data: "admin:edit:platform_2_url" },
+        { text: `✏️ ${PLATFORMS.p3.name}`, callback_data: "admin:edit:platform_3_url" },
+        { text: `✏️ ${PLATFORMS.p4.name}`, callback_data: "admin:edit:platform_4_url" },
       ],
-      [
-        { text: PLATFORMS.p3.name, callback_data: "admin:edit:platform_3_url" },
-        { text: PLATFORMS.p4.name, callback_data: "admin:edit:platform_4_url" },
-      ],
+      [toggle("p1"), toggle("p2")],
+      [toggle("p3"), toggle("p4")],
       [
         { text: "➕ إضافة أدمن", callback_data: "admin:edit:add_admin" },
         { text: "➖ حذف أدمن", callback_data: "admin:edit:remove_admin" },
@@ -483,6 +497,15 @@ async function applyFieldValue(field: EditableField, value: string): Promise<str
     await updateBotSettings({ promo_code: value });
     return "✅ تم تغيير البروموكود.";
   }
+  if (field === "channel_chat_id") {
+    const raw = value.trim();
+    const ok = /^-?\d{5,20}$/.test(raw) || /^@[A-Za-z0-9_]{4,}$/.test(raw);
+    if (!ok) return "⚠️ ابعت معرّف رقمي مثل <code>-1001234567890</code> أو <code>@channel</code>.";
+    const probe = (await call("getChat", { chat_id: raw })) as { ok: boolean } | null;
+    if (!probe?.ok) return "⚠️ البوت مش قادر يشوف القناة دي. تأكد إنه أدمن فيها وجرّب تاني.";
+    await updateBotSettings({ channel_chat_id: raw });
+    return "✅ تم ربط القناة، التحقق من الاشتراك شغّال دلوقتي.";
+  }
   if (!validHttpUrl(value)) return "⚠️ ابعت رابط كامل يبدأ بـ https://";
   await updateBotSettings({ [field]: value } as any);
   return "✅ تم حفظ الرابط بنجاح.";
@@ -490,6 +513,7 @@ async function applyFieldValue(field: EditableField, value: string): Promise<str
 
 const COMMAND_FIELDS: Record<string, EditableField> = {
   "/set_channel": "channel_url",
+  "/set_channel_id": "channel_chat_id",
   "/set_support": "support_url",
   "/set_platform1": "platform_1_url",
   "/set_platform2": "platform_2_url",
@@ -541,17 +565,23 @@ async function handleAdminCommand(chatId: number, text: string) {
   return true;
 }
 
-/** Resolve @channel from a t.me URL. */
-function channelChatId(channelUrl: string): string | null {
-  const m = /t\.me\/(?:s\/)?([A-Za-z0-9_]{4,})/.exec(channelUrl ?? "");
+/**
+ * Which chat to query. Private channels (t.me/+invite) have no username, so the
+ * stored numeric chat id (saved automatically when the bot is added as admin,
+ * or set manually) is the only reliable target.
+ */
+function resolveChannelChat(settings: BotSettings): string | null {
+  const stored = settings.channelChatId?.trim();
+  if (stored) return stored;
+  const m = /t\.me\/(?:s\/)?([A-Za-z][A-Za-z0-9_]{3,})/.exec(settings.channelUrl ?? "");
   return m?.[1] ? `@${m[1]}` : null;
 }
 
 type MembershipResult = "member" | "not_member" | "unavailable";
 
 /** Check membership without treating Telegram permission failures as non-membership. */
-async function channelMembership(channelUrl: string, userId?: number): Promise<MembershipResult> {
-  const chat = channelChatId(channelUrl);
+async function channelMembership(settings: BotSettings, userId?: number): Promise<MembershipResult> {
+  const chat = resolveChannelChat(settings);
   if (!chat || !userId) return "unavailable";
   const res = (await call("getChatMember", { chat_id: chat, user_id: userId })) as
     | { ok: boolean; result?: { status?: string; is_member?: boolean } }
@@ -571,6 +601,17 @@ async function channelMembership(channelUrl: string, userId?: number): Promise<M
 
 export async function handleUpdate(update: any) {
   const settings = await getBotSettings();
+
+  // Bot added to (or posting in) a channel → remember its numeric chat id so
+  // membership checks work for private channels that have no @username.
+  const memberChat = update?.my_chat_member?.chat ?? update?.channel_post?.chat;
+  if (memberChat?.id && (memberChat.type === "channel" || memberChat.type === "supergroup")) {
+    if (settings.channelChatId !== String(memberChat.id)) {
+      await updateBotSettings({ channel_chat_id: String(memberChat.id) });
+    }
+    return;
+  }
+
   const cb = update?.callback_query;
   if (cb) {
     const chatId = cb.message?.chat?.id as number | undefined;
@@ -592,6 +633,23 @@ export async function handleUpdate(update: any) {
       if (parts[1] === "on" || parts[1] === "off") {
         await updateBotSettings({ enabled: parts[1] === "on" });
         await answerCallback(cb.id, parts[1] === "on" ? "تم تشغيل البوت" : "تم إيقاف البوت");
+      } else if (parts[1] === "toggle") {
+        const pk = (parts[2] ?? "") as PlatformKey;
+        if (pk in PLATFORMS) {
+          const next = !settings.platformEnabled[pk];
+          const column = `platform_${pk.slice(1)}_enabled`;
+          await updateBotSettings({ [column]: next } as any);
+          await answerCallback(cb.id, next ? `تم تفعيل ${PLATFORMS[pk].name}` : `تم إخفاء ${PLATFORMS[pk].name}`);
+        } else {
+          await answerCallback(cb.id);
+        }
+      } else if (parts[1] === "edit") {
+        const field = (parts[2] ?? "") as EditableField;
+        await answerCallback(cb.id);
+        if (field in FIELD_LABEL) {
+          await askForValue(chatId, field);
+          return;
+        }
       } else if (parts[1] === "help") {
         await answerCallback(cb.id);
         await sendMessage(chatId, ADMIN_HELP);
@@ -611,16 +669,19 @@ export async function handleUpdate(update: any) {
     if (action === "lang") {
       await answerCallback(cb.id);
       await clearFlow(chatId);
-      await sendPhoto(chatId, "platforms", T[lang].platform, [
-        [
-          { text: `${PLATFORMS.p1.emoji} ${PLATFORMS.p1.name}`, callback_data: `plat:${lang}:p1` },
-          { text: `${PLATFORMS.p2.emoji} ${PLATFORMS.p2.name}`, callback_data: `plat:${lang}:p2` },
-        ],
-        [
-          { text: `${PLATFORMS.p3.emoji} ${PLATFORMS.p3.name}`, callback_data: `plat:${lang}:p3` },
-          { text: `${PLATFORMS.p4.emoji} ${PLATFORMS.p4.name}`, callback_data: `plat:${lang}:p4` },
-        ],
-      ]);
+      const active = (Object.keys(PLATFORMS) as PlatformKey[]).filter(
+        (pk) => settings.platformEnabled[pk],
+      );
+      const rows: Btn[][] = [];
+      for (let i = 0; i < active.length; i += 2) {
+        rows.push(
+          active.slice(i, i + 2).map((pk) => ({
+            text: `${PLATFORMS[pk].emoji} ${PLATFORMS[pk].name}`,
+            callback_data: `plat:${lang}:${pk}`,
+          })),
+        );
+      }
+      await sendPhoto(chatId, "platforms", T[lang].platform, rows);
       return;
     }
     if (action === "plat") {
@@ -644,7 +705,7 @@ export async function handleUpdate(update: any) {
         await sendMessage(chatId, T[lang].step5);
         return;
       }
-      const membership = await channelMembership(settings.channelUrl, cb.from?.id);
+      const membership = await channelMembership(settings, cb.from?.id);
       if (membership === "unavailable") {
         await answerCallback(cb.id, T[lang].membershipUnavailable, true);
         await sendMessage(chatId, T[lang].membershipUnavailableMsg, [
@@ -683,6 +744,27 @@ export async function handleUpdate(update: any) {
     }
     if (text === "/bot_on" || text === "/bot_off") {
       await updateBotSettings({ enabled: text === "/bot_on" });
+      await sendAdminPanel(chatId, await getBotSettings());
+      return;
+    }
+    // Admin forwarded a post from the channel → capture its numeric chat id.
+    const forwarded = msg.forward_from_chat ?? msg.forward_origin?.chat;
+    if (forwarded?.id && (forwarded.type === "channel" || forwarded.type === "supergroup")) {
+      await updateBotSettings({ channel_chat_id: String(forwarded.id) });
+      await sendMessage(
+        chatId,
+        `✅ تم ربط القناة <code>${escape(String(forwarded.id))}</code> — التحقق من الاشتراك شغّال دلوقتي.`,
+        undefined,
+        true,
+      );
+      await sendAdminPanel(chatId, await getBotSettings());
+      return;
+    }
+    // Reply to a ForceReply prompt → apply the requested field value.
+    const field = fieldFromPrompt(msg.reply_to_message?.text);
+    if (field && text) {
+      const result = await applyFieldValue(field, text);
+      await sendMessage(chatId, result, undefined, true);
       await sendAdminPanel(chatId, await getBotSettings());
       return;
     }

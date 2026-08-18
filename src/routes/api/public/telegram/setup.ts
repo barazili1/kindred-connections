@@ -33,7 +33,7 @@ export const Route = createFileRoute("/api/public/telegram/setup")({
           body: JSON.stringify({
             url: webhookUrl,
             secret_token: secret,
-            allowed_updates: ["message", "edited_message", "callback_query"],
+            allowed_updates: ["message", "edited_message", "callback_query", "my_chat_member", "channel_post"],
             drop_pending_updates: true,
           }),
         }).then((r) => r.json());

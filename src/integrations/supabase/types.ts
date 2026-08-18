@@ -35,12 +35,17 @@ export type Database = {
       telegram_bot_settings: {
         Row: {
           app_base_url: string | null
+          channel_chat_id: string | null
           channel_url: string
           enabled: boolean
           id: number
+          platform_1_enabled: boolean
           platform_1_url: string
+          platform_2_enabled: boolean
           platform_2_url: string
+          platform_3_enabled: boolean
           platform_3_url: string
+          platform_4_enabled: boolean
           platform_4_url: string
           promo_code: string
           support_url: string
@@ -48,12 +53,17 @@ export type Database = {
         }
         Insert: {
           app_base_url?: string | null
+          channel_chat_id?: string | null
           channel_url?: string
           enabled?: boolean
           id?: number
+          platform_1_enabled?: boolean
           platform_1_url?: string
+          platform_2_enabled?: boolean
           platform_2_url?: string
+          platform_3_enabled?: boolean
           platform_3_url?: string
+          platform_4_enabled?: boolean
           platform_4_url?: string
           promo_code?: string
           support_url?: string
@@ -61,12 +71,17 @@ export type Database = {
         }
         Update: {
           app_base_url?: string | null
+          channel_chat_id?: string | null
           channel_url?: string
           enabled?: boolean
           id?: number
+          platform_1_enabled?: boolean
           platform_1_url?: string
+          platform_2_enabled?: boolean
           platform_2_url?: string
+          platform_3_enabled?: boolean
           platform_3_url?: string
+          platform_4_enabled?: boolean
           platform_4_url?: string
           promo_code?: string
           support_url?: string
