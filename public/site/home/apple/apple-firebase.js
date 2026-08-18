@@ -151,7 +151,8 @@
     if (resetBtn) resetBtn.addEventListener('click', async () => {
       setLoading(true);
       try {
-        await writePattern(randomPattern());
+        await adminReady;
+        if (isAdmin) await writePattern(randomPattern());
         values = null;
         currentRow = 0;
         container.innerHTML = '';
