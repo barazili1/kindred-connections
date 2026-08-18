@@ -15,7 +15,7 @@ export type BotSettings = {
 
 export const DEFAULT_BOT_SETTINGS: BotSettings = {
   enabled: true,
-  channelUrl: "https://t.me/+KA1g9YjXsmBmZmNk",
+  channelUrl: "https://t.me/+GqKpGbFjOaBjYTQ8",
   supportUrl: "https://t.me/TOPx111m",
   platform1Url: PLATFORMS.p1.download,
   platform2Url: PLATFORMS.p2.download,

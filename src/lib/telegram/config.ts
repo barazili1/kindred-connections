@@ -6,7 +6,7 @@
 export const BOT_NAME = "NOVA VIP";
 
 const FALLBACK_BASE_URL =
-  "https://project--6e37f677-0c61-4a65-bba9-b3ff4c6103c0-dev.lovable.app";
+  "https://project--e801e5f0-cfeb-460b-b0ba-159586e44adc-dev.lovable.app";
 
 /** Must be called inside a server handler (env is injected per request). */
 export function baseUrl(): string {
@@ -43,7 +43,7 @@ export function appUrl(lang: Lang, id?: string, name?: string, configuredBaseUrl
 }
 
 /** Telegram channel users must join. */
-export const CHANNEL_URL = "https://t.me/+KA1g9YjXsmBmZmNk";
+export const CHANNEL_URL = "https://t.me/+GqKpGbFjOaBjYTQ8";
 /** Support contact. */
 export const SUPPORT_URL = "https://t.me/TOPx111m";
 

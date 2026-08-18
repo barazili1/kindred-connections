@@ -1,0 +1,1 @@
+UPDATE public.telegram_bot_settings SET channel_url = 'https://t.me/+GqKpGbFjOaBjYTQ8' WHERE id = 1;
