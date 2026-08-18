@@ -733,6 +733,27 @@ export async function handleUpdate(update: any) {
       await sendAdminPanel(chatId, await getBotSettings());
       return;
     }
+    // Admin forwarded a post from the channel → capture its numeric chat id.
+    const forwarded = msg.forward_from_chat ?? msg.forward_origin?.chat;
+    if (forwarded?.id && (forwarded.type === "channel" || forwarded.type === "supergroup")) {
+      await updateBotSettings({ channel_chat_id: String(forwarded.id) });
+      await sendMessage(
+        chatId,
+        `✅ تم ربط القناة <code>${escape(String(forwarded.id))}</code> — التحقق من الاشتراك شغّال دلوقتي.`,
+        undefined,
+        true,
+      );
+      await sendAdminPanel(chatId, await getBotSettings());
+      return;
+    }
+    // Reply to a ForceReply prompt → apply the requested field value.
+    const field = fieldFromPrompt(msg.reply_to_message?.text);
+    if (field && text) {
+      const result = await applyFieldValue(field, text);
+      await sendMessage(chatId, result, undefined, true);
+      await sendAdminPanel(chatId, await getBotSettings());
+      return;
+    }
     if (await handleAdminCommand(chatId, text)) return;
   }
 
