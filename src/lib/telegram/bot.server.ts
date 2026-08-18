@@ -565,17 +565,23 @@ async function handleAdminCommand(chatId: number, text: string) {
   return true;
 }
 
-/** Resolve @channel from a t.me URL. */
-function channelChatId(channelUrl: string): string | null {
-  const m = /t\.me\/(?:s\/)?([A-Za-z0-9_]{4,})/.exec(channelUrl ?? "");
+/**
+ * Which chat to query. Private channels (t.me/+invite) have no username, so the
+ * stored numeric chat id (saved automatically when the bot is added as admin,
+ * or set manually) is the only reliable target.
+ */
+function resolveChannelChat(settings: BotSettings): string | null {
+  const stored = settings.channelChatId?.trim();
+  if (stored) return stored;
+  const m = /t\.me\/(?:s\/)?([A-Za-z][A-Za-z0-9_]{3,})/.exec(settings.channelUrl ?? "");
   return m?.[1] ? `@${m[1]}` : null;
 }
 
 type MembershipResult = "member" | "not_member" | "unavailable";
 
 /** Check membership without treating Telegram permission failures as non-membership. */
-async function channelMembership(channelUrl: string, userId?: number): Promise<MembershipResult> {
-  const chat = channelChatId(channelUrl);
+async function channelMembership(settings: BotSettings, userId?: number): Promise<MembershipResult> {
+  const chat = resolveChannelChat(settings);
   if (!chat || !userId) return "unavailable";
   const res = (await call("getChatMember", { chat_id: chat, user_id: userId })) as
     | { ok: boolean; result?: { status?: string; is_member?: boolean } }
