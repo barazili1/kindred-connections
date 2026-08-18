@@ -388,19 +388,24 @@ const FIELD_LABEL: Record<EditableField, string> = {
   remove_admin: "حذف أدمن (ID تليجرام)",
 };
 
+function platformLine(pk: PlatformKey, url: string, on: boolean) {
+  return `${on ? "🟢" : "⛔️"} ${PLATFORMS[pk].name}: ${escape(url)}`;
+}
+
 function adminPanel(settings: BotSettings, admins: { id: number; label: string | null }[]) {
   const status = settings.enabled ? "🟢 يعمل" : "🔴 متوقف";
   return (
     `👑 <b>لوحة تحكم ${BOT_NAME}</b>\n${RULE}\n` +
     `الحالة: <b>${status}</b>\n\n` +
     `📢 القناة: ${escape(settings.channelUrl)}\n` +
+    `🆔 معرّف القناة: <code>${escape(settings.channelChatId ?? "غير مضبوط")}</code>\n` +
     `🛠 الدعم: ${escape(settings.supportUrl)}\n` +
     `🎁 البروموكود: <code>${escape(settings.promoCode)}</code>\n` +
     `🌐 التطبيق: ${escape(settings.appBaseUrl ?? "الافتراضي")}\n\n` +
-    `${PLATFORMS.p1.name}: ${escape(settings.platform1Url)}\n` +
-    `${PLATFORMS.p2.name}: ${escape(settings.platform2Url)}\n` +
-    `${PLATFORMS.p3.name}: ${escape(settings.platform3Url)}\n` +
-    `${PLATFORMS.p4.name}: ${escape(settings.platform4Url)}\n\n` +
+    `${platformLine("p1", settings.platform1Url, settings.platformEnabled.p1)}\n` +
+    `${platformLine("p2", settings.platform2Url, settings.platformEnabled.p2)}\n` +
+    `${platformLine("p3", settings.platform3Url, settings.platformEnabled.p3)}\n` +
+    `${platformLine("p4", settings.platform4Url, settings.platformEnabled.p4)}\n\n` +
     `👥 الأدمن: ${admins.map((a) => `<code>${a.id}</code>`).join(" · ")}\n` +
     `${RULE}\nاختر ما تريد تعديله:`
   );
@@ -408,6 +413,10 @@ function adminPanel(settings: BotSettings, admins: { id: number; label: string |
 
 async function sendAdminPanel(chatId: number, settings: BotSettings) {
   const admins = await listAdmins();
+  const toggle = (pk: PlatformKey) => ({
+    text: `${settings.platformEnabled[pk] ? "🟢" : "⛔️"} ${PLATFORMS[pk].name}`,
+    callback_data: `admin:toggle:${pk}`,
+  });
   await sendMessage(
     chatId,
     adminPanel(settings, admins),
@@ -418,20 +427,23 @@ async function sendAdminPanel(chatId: number, settings: BotSettings) {
       ],
       [
         { text: "📢 القناة", callback_data: "admin:edit:channel_url" },
+        { text: "🆔 معرّف القناة", callback_data: "admin:edit:channel_chat_id" },
+      ],
+      [
         { text: "🛠 الدعم", callback_data: "admin:edit:support_url" },
-      ],
-      [
         { text: "🎁 البروموكود", callback_data: "admin:edit:promo_code" },
-        { text: "🌐 التطبيق", callback_data: "admin:edit:app_base_url" },
+      ],
+      [{ text: "🌐 التطبيق", callback_data: "admin:edit:app_base_url" }],
+      [
+        { text: `✏️ ${PLATFORMS.p1.name}`, callback_data: "admin:edit:platform_1_url" },
+        { text: `✏️ ${PLATFORMS.p2.name}`, callback_data: "admin:edit:platform_2_url" },
       ],
       [
-        { text: PLATFORMS.p1.name, callback_data: "admin:edit:platform_1_url" },
-        { text: PLATFORMS.p2.name, callback_data: "admin:edit:platform_2_url" },
+        { text: `✏️ ${PLATFORMS.p3.name}`, callback_data: "admin:edit:platform_3_url" },
+        { text: `✏️ ${PLATFORMS.p4.name}`, callback_data: "admin:edit:platform_4_url" },
       ],
-      [
-        { text: PLATFORMS.p3.name, callback_data: "admin:edit:platform_3_url" },
-        { text: PLATFORMS.p4.name, callback_data: "admin:edit:platform_4_url" },
-      ],
+      [toggle("p1"), toggle("p2")],
+      [toggle("p3"), toggle("p4")],
       [
         { text: "➕ إضافة أدمن", callback_data: "admin:edit:add_admin" },
         { text: "➖ حذف أدمن", callback_data: "admin:edit:remove_admin" },
