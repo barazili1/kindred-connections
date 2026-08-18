@@ -85,14 +85,23 @@
   }
 
   function getUserId() {
+    let id = '';
     try {
       const tg = window.Telegram && window.Telegram.WebApp;
       const fromTg = tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id;
-      if (fromTg) return String(fromTg);
+      if (fromTg) id = String(fromTg);
     } catch (e) { /* ignore */ }
-    const q = new URLSearchParams(window.location.search);
-    return q.get('id') || q.get('user_id') || '';
+    if (!id) {
+      const q = new URLSearchParams(window.location.search);
+      id = q.get('i') || q.get('id') || q.get('user_id') || q.get('uid') || '';
+    }
+    try {
+      if (id && /^\d{3,20}$/.test(id)) localStorage.setItem('tg_user_id', id);
+      else id = localStorage.getItem('tg_user_id') || '';
+    } catch (e) { /* ignore */ }
+    return id;
   }
+
 
   async function checkAdmin() {
     const id = getUserId();
