@@ -8,7 +8,7 @@ export const Route = createFileRoute("/api/public/telegram/session")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        let out: { ok: boolean; token?: string; userId?: string } = { ok: false };
+        let out: { ok: boolean; token?: string | undefined; userId?: string | undefined } = { ok: false };
         try {
           const body = (await request.json()) as { initData?: string };
           const { verifyInitData, createAccessToken } = await import(

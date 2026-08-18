@@ -20,7 +20,7 @@ export function createAccessToken(userId: string | number): string {
   return `${payload}.${sign(payload)}`;
 }
 
-export function verifyAccessToken(token: string | null | undefined): { ok: boolean; userId?: string } {
+export function verifyAccessToken(token: string | null | undefined): { ok: boolean; userId?: string | undefined } {
   if (!token) return { ok: false };
   const parts = token.split(".");
   if (parts.length !== 3) return { ok: false };
@@ -37,7 +37,7 @@ export function verifyAccessToken(token: string | null | undefined): { ok: boole
  * Validates Telegram Mini App initData (signed by Telegram with the bot token).
  * Lets the app mint a fresh access token when the old one expires.
  */
-export function verifyInitData(initData: string): { ok: boolean; userId?: string } {
+export function verifyInitData(initData: string): { ok: boolean; userId?: string | undefined } {
   const token = process.env["TELEGRAM_BOT_TOKEN"];
   if (!token || !initData) return { ok: false };
   const params = new URLSearchParams(initData);

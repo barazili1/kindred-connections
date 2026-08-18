@@ -10,7 +10,7 @@ export const Route = createFileRoute("/api/public/telegram/verify-access")({
       GET: async ({ request }) => {
         const url = new URL(request.url);
         const tk = url.searchParams.get("tk");
-        let result: { ok: boolean; userId?: string } = { ok: false };
+        let result: { ok: boolean; userId?: string | undefined } = { ok: false };
         try {
           const { verifyAccessToken } = await import("@/lib/telegram/access.server");
           result = verifyAccessToken(tk);
