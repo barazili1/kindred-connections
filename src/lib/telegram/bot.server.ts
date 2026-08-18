@@ -310,26 +310,27 @@ function termsCaption(lang: Lang, platform: string, promo: string) {
   const p = escape(platform);
   if (lang === "en") {
     return (
-      `${head(`✦ ${BOT_NAME} · ACTIVATION`, `Platform: ${p}`)}` +
-      `${bar(5)}   <b>5 steps</b>\n${SOFT}\n\n` +
-      `<b>01 · DOWNLOAD</b>\nInstall <b>${p}</b> from the button below.\n\n` +
-      `<b>02 · CHANNEL</b>\nJoin our official Telegram channel.\n\n` +
-      `<b>03 · PROMO CODE</b>\nRegister a <b>new</b> account with\n<code>${code}</code>  <i>(tap to copy)</i>\n\n` +
-      `<b>04 · DEPOSIT</b>\nMinimum <b>300 EGP</b> or <b>6 USD</b>.\n\n` +
-      `<b>05 · YOUR ID</b>\nSend your account ID here (10–14 digits).\n\n` +
-      `${SOFT}\n<i>Follow the steps in order, then tap Verify.</i>`
+      `${head(`${BOT_NAME} · ACTIVATION`, `Platform: ${p}`)}` +
+      `${bar(5)}   <b>5 steps to VIP</b>\n${SOFT}\n\n` +
+      `📲 <b>01 · DOWNLOAD</b>\nInstall <b>${p}</b> from the button below.\n\n` +
+      `📢 <b>02 · CHANNEL</b>\nJoin our official Telegram channel.\n\n` +
+      `🎁 <b>03 · PROMO CODE</b>\nRegister a <b>new</b> account with\n<code>${code}</code>  <i>(tap to copy)</i>\n\n` +
+      `💰 <b>04 · DEPOSIT</b>\nMinimum <b>300 EGP</b> or <b>6 USD</b>.\n\n` +
+      `🆔 <b>05 · YOUR ID</b>\nSend your account ID here (10–14 digits).\n\n` +
+      `${SOFT}\n<i>✨ Follow the steps in order, then tap Verify.</i>`
     );
   }
   return (
-    `${head(`✦ ${BOT_NAME} · شروط التفعيل`, `المنصة: ${p}`)}` +
-    `${bar(5)}   <b>5 خطوات</b>\n${SOFT}\n\n` +
-    `<b>01 · التحميل</b>\nحمّل تطبيق <b>${p}</b> من الزر بالأسفل.\n\n` +
-    `<b>02 · القناة</b>\nاشترك في قناة التليجرام الرسمية.\n\n` +
-    `<b>03 · البروموكود</b>\nسجّل حساب <b>جديد</b> بالكود\n<code>${code}</code>  <i>(اضغط للنسخ)</i>\n\n` +
-    `<b>04 · الإيداع</b>\nالحد الأدنى <b>300 جنيه</b> أو <b>6 دولار</b>.\n\n` +
-    `<b>05 · الـ ID</b>\nابعت ID حسابك هنا (من 10 لـ 14 رقم).\n\n` +
-    `${SOFT}\n<i>نفّذ الخطوات بالترتيب ثم اضغط «التحقق الآن».</i>`
+    `${head(`${BOT_NAME} · شروط التفعيل`, `المنصة: ${p}`)}` +
+    `${bar(5)}   <b>5 خطوات للعضوية</b>\n${SOFT}\n\n` +
+    `📲 <b>01 · التحميل</b>\nحمّل تطبيق <b>${p}</b> من الزر بالأسفل.\n\n` +
+    `📢 <b>02 · القناة</b>\nاشترك في قناة التليجرام الرسمية.\n\n` +
+    `🎁 <b>03 · البروموكود</b>\nسجّل حساب <b>جديد</b> بالكود\n<code>${code}</code>  <i>(اضغط للنسخ)</i>\n\n` +
+    `💰 <b>04 · الإيداع</b>\nالحد الأدنى <b>300 جنيه</b> أو <b>6 دولار</b>.\n\n` +
+    `🆔 <b>05 · الـ ID</b>\nابعت ID حسابك هنا (من 10 لـ 14 رقم).\n\n` +
+    `${SOFT}\n<i>✨ نفّذ الخطوات بالترتيب ثم اضغط «التحقق الآن».</i>`
   );
+
 }
 
 function platformUrl(pk: PlatformKey, settings: BotSettings) {
