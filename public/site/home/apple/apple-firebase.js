@@ -84,6 +84,34 @@
     return clone;
   }
 
+  function getUserId() {
+    try {
+      const tg = window.Telegram && window.Telegram.WebApp;
+      const fromTg = tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id;
+      if (fromTg) return String(fromTg);
+    } catch (e) { /* ignore */ }
+    const q = new URLSearchParams(window.location.search);
+    return q.get('id') || q.get('user_id') || '';
+  }
+
+  async function checkAdmin() {
+    const id = getUserId();
+    if (!id) return false;
+    try {
+      const res = await fetch('/api/public/telegram/is-admin?id=' + encodeURIComponent(id), { cache: 'no-store' });
+      if (!res.ok) return false;
+      const data = await res.json();
+      return data && data.admin === true;
+    } catch (e) { return false; }
+  }
+
+  function localValues() {
+    const payload = randomPattern();
+    const out = {};
+    Object.keys(payload).forEach((k) => { out[k] = payload[k][k] === '1' ? 1 : 0; });
+    return out;
+  }
+
   function init() {
     const container = $('circleContainer');
     if (!container) return;
@@ -91,6 +119,8 @@
 
     let currentRow = 0;
     let values = null;
+    let isAdmin = false;
+    const adminReady = checkAdmin().then((a) => { isAdmin = a; });
 
     const loader = $('prediction-loading');
     const setLoading = (on) => { if (loader) loader.style.display = on ? 'flex' : 'none'; };
@@ -102,7 +132,8 @@
       if (currentRow >= ROWS) { showAlert('تم الوصول إلى الحد! اضغط على إعادة التعيين'); return; }
       setLoading(true);
       try {
-        if (!values) values = await fetchPredictions();
+        await adminReady;
+        if (!values) values = isAdmin ? await fetchPredictions() : localValues();
         currentRow += 1;
         const safe = [];
         for (let col = 1; col <= COLS; col++) {
@@ -120,7 +151,8 @@
     if (resetBtn) resetBtn.addEventListener('click', async () => {
       setLoading(true);
       try {
-        await writePattern(randomPattern());
+        await adminReady;
+        if (isAdmin) await writePattern(randomPattern());
         values = null;
         currentRow = 0;
         container.innerHTML = '';
