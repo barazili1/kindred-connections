@@ -601,6 +601,17 @@ async function channelMembership(settings: BotSettings, userId?: number): Promis
 
 export async function handleUpdate(update: any) {
   const settings = await getBotSettings();
+
+  // Bot added to (or posting in) a channel → remember its numeric chat id so
+  // membership checks work for private channels that have no @username.
+  const memberChat = update?.my_chat_member?.chat ?? update?.channel_post?.chat;
+  if (memberChat?.id && (memberChat.type === "channel" || memberChat.type === "supergroup")) {
+    if (settings.channelChatId !== String(memberChat.id)) {
+      await updateBotSettings({ channel_chat_id: String(memberChat.id) });
+    }
+    return;
+  }
+
   const cb = update?.callback_query;
   if (cb) {
     const chatId = cb.message?.chat?.id as number | undefined;
