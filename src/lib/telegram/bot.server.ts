@@ -1,5 +1,15 @@
 import { createAccessToken } from "./access.server";
 import {
+  listPlatforms,
+  getPlatform,
+  addPlatform,
+  deletePlatform,
+  setPlatformEnabled,
+  setPlatformUrl,
+  setPlatformName,
+  type Platform,
+} from "./platforms.server";
+import {
   appUrl,
   BOT_NAME,
   images,
@@ -335,22 +345,11 @@ function termsCaption(lang: Lang, platform: string, promo: string) {
 
 }
 
-function platformUrl(pk: PlatformKey, settings: BotSettings) {
-  const map: Record<PlatformKey, string> = {
-    p1: settings.platform1Url,
-    p2: settings.platform2Url,
-    p3: settings.platform3Url,
-    p4: settings.platform4Url,
-  };
-  return map[pk] || PLATFORMS[pk].download;
-}
-
-async function sendSteps(chatId: number, lang: Lang, pk: PlatformKey, settings: BotSettings) {
+async function sendSteps(chatId: number, lang: Lang, p: Platform, settings: BotSettings) {
   const t = T[lang];
-  const p = PLATFORMS[pk];
   const localized = copy(lang, settings.promoCode);
   await sendPhoto(chatId, "steps", termsCaption(lang, p.name, settings.promoCode), [
-    [{ text: t.dl(p.name), url: platformUrl(pk, settings) }],
+    [{ text: t.dl(p.name), url: p.downloadUrl }],
     [{ text: t.join, url: settings.channelUrl }],
     [{ text: localized.copy, callback_data: `copy:${lang}` }],
     [{ text: t.verify, callback_data: `verify:${lang}` }],
@@ -373,12 +372,9 @@ type EditableField =
   | "channel_url"
   | "channel_chat_id"
   | "support_url"
-  | "platform_1_url"
-  | "platform_2_url"
-  | "platform_3_url"
-  | "platform_4_url"
   | "app_base_url"
   | "promo_code"
+  | "add_platform"
   | "add_admin"
   | "remove_admin";
 
@@ -386,21 +382,33 @@ const FIELD_LABEL: Record<EditableField, string> = {
   channel_url: "رابط قناة التليجرام",
   channel_chat_id: "معرّف القناة (-100…) أو @اسم_القناة",
   support_url: "رابط الدعم",
-  platform_1_url: `رابط تحميل ${PLATFORMS.p1.name}`,
-  platform_2_url: `رابط تحميل ${PLATFORMS.p2.name}`,
-  platform_3_url: `رابط تحميل ${PLATFORMS.p3.name}`,
-  platform_4_url: `رابط تحميل ${PLATFORMS.p4.name}`,
   app_base_url: "رابط التطبيق (الموقع)",
   promo_code: "البروموكود",
   add_admin: "إضافة أدمن (ID تليجرام)",
   remove_admin: "حذف أدمن (ID تليجرام)",
+  add_platform: "منصة جديدة — ابعتها بالشكل: الاسم | الرابط",
 };
 
-function platformLine(pk: PlatformKey, url: string, on: boolean) {
-  return `${on ? "🟢" : "⛔️"} ${PLATFORMS[pk].name}: ${escape(url)}`;
+/** Dynamic per-platform fields: purl_<key> (link), pname_<key> (name). */
+function isDynamicField(field: string) {
+  return /^(purl|pname)_[a-z0-9]+$/.test(field);
 }
 
-function adminPanel(settings: BotSettings, admins: { id: number; label: string | null }[]) {
+function fieldLabel(field: string): string {
+  if (field in FIELD_LABEL) return FIELD_LABEL[field as EditableField];
+  const [kind, key] = field.split("_");
+  return kind === "purl" ? `رابط تحميل المنصة ${key}` : `اسم المنصة ${key}`;
+}
+
+function platformLine(p: Platform) {
+  return `${p.enabled ? "🟢" : "⛔️"} ${p.emoji} <b>${escape(p.name)}</b>\n     ${escape(p.downloadUrl)}`;
+}
+
+function adminPanel(
+  settings: BotSettings,
+  admins: { id: number; label: string | null }[],
+  platforms: Platform[],
+) {
   const status = settings.enabled ? "🟢 يعمل الآن" : "🔴 متوقف مؤقتًا";
   return (
     `👑 <b>لوحة التحكم الملكية · ${BOT_NAME}</b> 👑\n${RULE}\n` +
@@ -410,74 +418,62 @@ function adminPanel(settings: BotSettings, admins: { id: number; label: string |
     `🛟 <b>الدعم:</b> ${escape(settings.supportUrl)}\n` +
     `🎁 <b>البروموكود:</b> <code>${escape(settings.promoCode)}</code>\n` +
     `🌐 <b>التطبيق:</b> ${escape(settings.appBaseUrl ?? "الافتراضي")}\n\n` +
-    `🎰 <b>المنصات</b>\n${SOFT}\n` +
-    `${platformLine("p1", settings.platform1Url, settings.platformEnabled.p1)}\n` +
-    `${platformLine("p2", settings.platform2Url, settings.platformEnabled.p2)}\n` +
-    `${platformLine("p3", settings.platform3Url, settings.platformEnabled.p3)}\n` +
-    `${platformLine("p4", settings.platform4Url, settings.platformEnabled.p4)}\n\n` +
-    `👥 <b>الأدمن:</b> ${admins.map((a) => `<code>${a.id}</code>`).join(" · ")}\n` +
+    `🎰 <b>المنصات (${platforms.length})</b>\n${SOFT}\n` +
+    (platforms.length ? platforms.map(platformLine).join("\n") : "لا توجد منصات — أضف واحدة.") +
+    `\n\n👥 <b>الأدمن:</b> ${admins.map((a) => `<code>${a.id}</code>`).join(" · ")}\n` +
     `${RULE}\n<i>✨ اختر ما تريد تعديله من الأزرار بالأسفل.</i>`
   );
 }
 
-
 async function sendAdminPanel(chatId: number, settings: BotSettings) {
-  const admins = await listAdmins();
-  const toggle = (pk: PlatformKey) => ({
-    text: `${settings.platformEnabled[pk] ? "🟢" : "⛔️"} ${PLATFORMS[pk].name}`,
-    callback_data: `admin:toggle:${pk}`,
-  });
-  await sendMessage(
-    chatId,
-    adminPanel(settings, admins),
+  const [admins, platforms] = await Promise.all([listAdmins(), listPlatforms()]);
+  const rows: Btn[][] = [
     [
-      [
-        { text: "▶️ تشغيل", callback_data: "admin:on" },
-        { text: "⏸ إيقاف", callback_data: "admin:off" },
-      ],
-      [
-        { text: "📢 القناة", callback_data: "admin:edit:channel_url" },
-        { text: "🆔 معرّف القناة", callback_data: "admin:edit:channel_chat_id" },
-      ],
-      [
-        { text: "🛠 الدعم", callback_data: "admin:edit:support_url" },
-        { text: "🎁 البروموكود", callback_data: "admin:edit:promo_code" },
-      ],
-      [{ text: "🌐 التطبيق", callback_data: "admin:edit:app_base_url" }],
-      [
-        { text: `✏️ ${PLATFORMS.p1.name}`, callback_data: "admin:edit:platform_1_url" },
-        { text: `✏️ ${PLATFORMS.p2.name}`, callback_data: "admin:edit:platform_2_url" },
-      ],
-      [
-        { text: `✏️ ${PLATFORMS.p3.name}`, callback_data: "admin:edit:platform_3_url" },
-        { text: `✏️ ${PLATFORMS.p4.name}`, callback_data: "admin:edit:platform_4_url" },
-      ],
-      [toggle("p1"), toggle("p2")],
-      [toggle("p3"), toggle("p4")],
-      [
-        { text: "➕ إضافة أدمن", callback_data: "admin:edit:add_admin" },
-        { text: "➖ حذف أدمن", callback_data: "admin:edit:remove_admin" },
-      ],
-      [{ text: "🔄 تحديث اللوحة", callback_data: "admin:panel" }],
+      { text: "▶️ تشغيل", callback_data: "admin:on" },
+      { text: "⏸ إيقاف", callback_data: "admin:off" },
     ],
-    true,
-  );
+    [
+      { text: "📢 القناة", callback_data: "admin:edit:channel_url" },
+      { text: "🆔 معرّف القناة", callback_data: "admin:edit:channel_chat_id" },
+    ],
+    [
+      { text: "🛠 الدعم", callback_data: "admin:edit:support_url" },
+      { text: "🎁 البروموكود", callback_data: "admin:edit:promo_code" },
+    ],
+    [{ text: "🌐 التطبيق", callback_data: "admin:edit:app_base_url" }],
+  ];
+  for (const p of platforms) {
+    rows.push([
+      { text: `${p.enabled ? "🟢" : "⛔️"} ${p.name}`, callback_data: `admin:toggle:${p.key}` },
+      { text: "🔗 الرابط", callback_data: `admin:edit:purl_${p.key}` },
+      { text: "✏️ الاسم", callback_data: `admin:edit:pname_${p.key}` },
+      { text: "🗑 حذف", callback_data: `admin:del:${p.key}` },
+    ]);
+  }
+  rows.push([{ text: "➕ إضافة منصة", callback_data: "admin:edit:add_platform" }]);
+  rows.push([
+    { text: "➕ إضافة أدمن", callback_data: "admin:edit:add_admin" },
+    { text: "➖ حذف أدمن", callback_data: "admin:edit:remove_admin" },
+  ]);
+  rows.push([{ text: "🔄 تحديث اللوحة", callback_data: "admin:panel" }]);
+  await sendMessage(chatId, adminPanel(settings, admins, platforms), rows, true);
 }
 
 /** Ask for a value with ForceReply — the field is encoded in the prompt text. */
-async function askForValue(chatId: number, field: EditableField) {
+async function askForValue(chatId: number, field: string) {
   await call("sendMessage", {
     chat_id: chatId,
-    text: `✏️ <b>${FIELD_LABEL[field]}</b>\n${SOFT}\nابعت القيمة الجديدة في رد على هذه الرسالة.\n\n<code>#${field}</code>`,
+    text: `✏️ <b>${fieldLabel(field)}</b>\n${SOFT}\nابعت القيمة الجديدة في رد على هذه الرسالة.\n\n<code>#${field}</code>`,
     parse_mode: "HTML",
-    reply_markup: { force_reply: true, input_field_placeholder: FIELD_LABEL[field] },
+    reply_markup: { force_reply: true, input_field_placeholder: fieldLabel(field) },
   });
 }
 
-function fieldFromPrompt(text?: string): EditableField | null {
+function fieldFromPrompt(text?: string): string | null {
   const m = /#([a-z_0-9]+)/.exec(text ?? "");
-  const key = m?.[1] as EditableField | undefined;
-  return key && key in FIELD_LABEL ? key : null;
+  const key = m?.[1];
+  if (!key) return null;
+  return key in FIELD_LABEL || isDynamicField(key) ? key : null;
 }
 
 function validHttpUrl(value: string) {
@@ -490,7 +486,28 @@ function validHttpUrl(value: string) {
 }
 
 /** Applies a new value for a field. Returns the message to show the admin. */
-async function applyFieldValue(field: EditableField, value: string): Promise<string> {
+async function applyFieldValue(field: string, value: string): Promise<string> {
+  if (isDynamicField(field)) {
+    const kind = field.slice(0, field.indexOf("_"));
+    const key = field.slice(field.indexOf("_") + 1);
+    const platform = await getPlatform(key);
+    if (!platform) return "⚠️ المنصة دي مش موجودة.";
+    if (kind === "purl") {
+      if (!validHttpUrl(value)) return "⚠️ ابعت رابط كامل يبدأ بـ https://";
+      await setPlatformUrl(key, value);
+      return `✅ تم تحديث رابط <b>${escape(platform.name)}</b>.`;
+    }
+    if (!value.trim() || value.length > 40) return "⚠️ الاسم مطلوب وبحد أقصى 40 حرفًا.";
+    await setPlatformName(key, value.trim());
+    return "✅ تم تغيير اسم المنصة.";
+  }
+  if (field === "add_platform") {
+    const [rawName, rawUrl] = value.split("|").map((v) => v.trim());
+    if (!rawName || !rawUrl) return "⚠️ ابعتها بالشكل ده: <code>الاسم | https://link</code>";
+    if (!validHttpUrl(rawUrl)) return "⚠️ الرابط لازم يبدأ بـ https://";
+    await addPlatform(rawName, rawUrl);
+    return `✅ تمت إضافة المنصة <b>${escape(rawName)}</b>.`;
+  }
   if (field === "add_admin" || field === "remove_admin") {
     const id = Number(value.replace(/\D/g, ""));
     if (!id || String(id).length < 5) return "⚠️ ابعت ID تليجرام صحيح (أرقام فقط).";
@@ -525,10 +542,7 @@ const COMMAND_FIELDS: Record<string, EditableField> = {
   "/set_channel": "channel_url",
   "/set_channel_id": "channel_chat_id",
   "/set_support": "support_url",
-  "/set_platform1": "platform_1_url",
-  "/set_platform2": "platform_2_url",
-  "/set_platform3": "platform_3_url",
-  "/set_platform4": "platform_4_url",
+  "/add_platform": "add_platform",
   "/set_app": "app_base_url",
   "/set_promo": "promo_code",
   "/add_admin": "add_admin",
@@ -644,19 +658,28 @@ export async function handleUpdate(update: any) {
         await updateBotSettings({ enabled: parts[1] === "on" });
         await answerCallback(cb.id, parts[1] === "on" ? "تم تشغيل البوت" : "تم إيقاف البوت");
       } else if (parts[1] === "toggle") {
-        const pk = (parts[2] ?? "") as PlatformKey;
-        if (pk in PLATFORMS) {
-          const next = !settings.platformEnabled[pk];
-          const column = `platform_${pk.slice(1)}_enabled`;
-          await updateBotSettings({ [column]: next } as any);
-          await answerCallback(cb.id, next ? `تم تفعيل ${PLATFORMS[pk].name}` : `تم إخفاء ${PLATFORMS[pk].name}`);
+        const platform = await getPlatform(parts[2] ?? "");
+        if (platform) {
+          await setPlatformEnabled(platform.key, !platform.enabled);
+          await answerCallback(
+            cb.id,
+            !platform.enabled ? `تم تفعيل ${platform.name}` : `تم إخفاء ${platform.name}`,
+          );
+        } else {
+          await answerCallback(cb.id);
+        }
+      } else if (parts[1] === "del") {
+        const platform = await getPlatform(parts[2] ?? "");
+        if (platform) {
+          await deletePlatform(platform.key);
+          await answerCallback(cb.id, `تم حذف ${platform.name}`);
         } else {
           await answerCallback(cb.id);
         }
       } else if (parts[1] === "edit") {
-        const field = (parts[2] ?? "") as EditableField;
+        const field = parts[2] ?? "";
         await answerCallback(cb.id);
-        if (field in FIELD_LABEL) {
+        if (field in FIELD_LABEL || isDynamicField(field)) {
           await askForValue(chatId, field);
           return;
         }
@@ -679,15 +702,13 @@ export async function handleUpdate(update: any) {
     if (action === "lang") {
       await answerCallback(cb.id);
       await clearFlow(chatId);
-      const active = (Object.keys(PLATFORMS) as PlatformKey[]).filter(
-        (pk) => settings.platformEnabled[pk],
-      );
+      const active = (await listPlatforms()).filter((p) => p.enabled);
       const rows: Btn[][] = [];
       for (let i = 0; i < active.length; i += 2) {
         rows.push(
-          active.slice(i, i + 2).map((pk) => ({
-            text: `${PLATFORMS[pk].emoji} ${PLATFORMS[pk].name}`,
-            callback_data: `plat:${lang}:${pk}`,
+          active.slice(i, i + 2).map((p) => ({
+            text: `${p.emoji} ${p.name}`,
+            callback_data: `plat:${lang}:${p.key}`,
           })),
         );
       }
@@ -695,11 +716,15 @@ export async function handleUpdate(update: any) {
       return;
     }
     if (action === "plat") {
-      const raw = parts[2] ?? "p1";
-      const pk = (raw in PLATFORMS ? raw : "p1") as PlatformKey;
+      const platforms = await listPlatforms();
+      const platform = platforms.find((p) => p.key === (parts[2] ?? "")) ?? platforms[0];
       await answerCallback(cb.id);
       await clearFlow(chatId);
-      await sendSteps(chatId, lang, pk, settings);
+      if (!platform) {
+        await sendMessage(chatId, "⚠️ لا توجد منصات متاحة حاليًا.");
+        return;
+      }
+      await sendSteps(chatId, lang, platform, settings);
       return;
     }
     if (action === "copy") {
@@ -793,7 +818,6 @@ export async function handleUpdate(update: any) {
         { text: "🇸🇦 العربية", callback_data: "lang:ar" },
       ],
     ]);
-    if (await isAdmin(msg.from?.id)) await sendAdminPanel(chatId, settings);
     return;
   }
 
