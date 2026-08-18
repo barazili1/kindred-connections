@@ -141,6 +141,9 @@
         }
         const pick = safe.length ? safe[Math.floor(Math.random() * safe.length)] : 0;
         container.insertBefore(makeRow(currentRow, pick), container.firstChild);
+        if (currentRow >= 5) {
+          showAlert('⚠️ المخاطرة عالية — يُفضّل السحب الآن!');
+        }
       } catch (e) {
         showAlert('تعذر جلب التوقعات، حاول مرة أخرى');
       } finally {
