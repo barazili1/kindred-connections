@@ -13,9 +13,7 @@ import {
   appUrl,
   BOT_NAME,
   images,
-  PLATFORMS,
   type Lang,
-  type PlatformKey,
 } from "./config";
 import { imageBytes, type ImageKey } from "./media.server";
 import {
