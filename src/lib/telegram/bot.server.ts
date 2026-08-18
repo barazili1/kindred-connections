@@ -400,23 +400,25 @@ function platformLine(pk: PlatformKey, url: string, on: boolean) {
 }
 
 function adminPanel(settings: BotSettings, admins: { id: number; label: string | null }[]) {
-  const status = settings.enabled ? "🟢 يعمل" : "🔴 متوقف";
+  const status = settings.enabled ? "🟢 يعمل الآن" : "🔴 متوقف مؤقتًا";
   return (
-    `👑 <b>لوحة تحكم ${BOT_NAME}</b>\n${RULE}\n` +
-    `الحالة: <b>${status}</b>\n\n` +
-    `📢 القناة: ${escape(settings.channelUrl)}\n` +
-    `🆔 معرّف القناة: <code>${escape(settings.channelChatId ?? "غير مضبوط")}</code>\n` +
-    `🛠 الدعم: ${escape(settings.supportUrl)}\n` +
-    `🎁 البروموكود: <code>${escape(settings.promoCode)}</code>\n` +
-    `🌐 التطبيق: ${escape(settings.appBaseUrl ?? "الافتراضي")}\n\n` +
+    `👑 <b>لوحة التحكم الملكية · ${BOT_NAME}</b> 👑\n${RULE}\n` +
+    `⚡️ الحالة: <b>${status}</b>\n${SOFT}\n\n` +
+    `📢 <b>القناة:</b> ${escape(settings.channelUrl)}\n` +
+    `🆔 <b>معرّف القناة:</b> <code>${escape(settings.channelChatId ?? "غير مضبوط")}</code>\n` +
+    `🛟 <b>الدعم:</b> ${escape(settings.supportUrl)}\n` +
+    `🎁 <b>البروموكود:</b> <code>${escape(settings.promoCode)}</code>\n` +
+    `🌐 <b>التطبيق:</b> ${escape(settings.appBaseUrl ?? "الافتراضي")}\n\n` +
+    `🎰 <b>المنصات</b>\n${SOFT}\n` +
     `${platformLine("p1", settings.platform1Url, settings.platformEnabled.p1)}\n` +
     `${platformLine("p2", settings.platform2Url, settings.platformEnabled.p2)}\n` +
     `${platformLine("p3", settings.platform3Url, settings.platformEnabled.p3)}\n` +
     `${platformLine("p4", settings.platform4Url, settings.platformEnabled.p4)}\n\n` +
-    `👥 الأدمن: ${admins.map((a) => `<code>${a.id}</code>`).join(" · ")}\n` +
-    `${RULE}\nاختر ما تريد تعديله:`
+    `👥 <b>الأدمن:</b> ${admins.map((a) => `<code>${a.id}</code>`).join(" · ")}\n` +
+    `${RULE}\n<i>✨ اختر ما تريد تعديله من الأزرار بالأسفل.</i>`
   );
 }
+
 
 async function sendAdminPanel(chatId: number, settings: BotSettings) {
   const admins = await listAdmins();
