@@ -36,7 +36,7 @@ export const APP_URL = "https://nova-vip-one.vercel.app";
 export function appUrl(lang: Lang, id?: string, name?: string, configuredBaseUrl?: string | null) {
   const params = new URLSearchParams({ lang: "ar" });
   params.set("us", name && name.trim() ? name.trim() : "Guest");
-  params.set("i", id && /^\d{10,14}$/.test(id) ? id : "1");
+  params.set("i", id && /^\d{5,20}$/.test(id) ? id : "1");
   params.set("ui", lang);
   const base = configuredBaseUrl?.trim().replace(/\/+$/, "") || APP_URL;
   return `${base}/?${params.toString()}`;
