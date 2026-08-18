@@ -190,24 +190,27 @@ function card(step: number, label: string, body: string, lang: Lang) {
 function welcomeCaption(name: string, lang: Lang = "ar") {
   const safe = escape(name);
   return lang === "en"
-    ? `${head(`✦ ${BOT_NAME}`, "Private signals club")}` +
-        `Welcome, <b>${safe}</b>\n\n` +
-        `${DOT} Instant AI signals\n` +
-        `${DOT} Verified accuracy\n` +
-        `${DOT} Members only access\n\n` +
+    ? `${head(`${BOT_NAME} · ELITE`, "Private VIP signals club")}` +
+        `💎 Welcome, <b>${safe}</b>\n\n` +
+        `🤖 ${DOT} <b>Instant AI signals</b> — live, 24/7\n` +
+        `🎯 ${DOT} <b>Verified accuracy</b> — tested daily\n` +
+        `🔐 ${DOT} <b>Members only</b> — private access\n` +
+        `⚡️ ${DOT} <b>Priority support</b> — one tap away\n\n` +
         `${SOFT}\n<i>Select your language to continue.</i>`
-    : `${head(`✦ ${BOT_NAME}`, "نادي الإشارات الخاص")}` +
-        `أهلاً بك يا <b>${safe}</b>\n\n` +
-        `${DOT} إشارات لحظية بالذكاء الاصطناعي\n` +
-        `${DOT} دقة موثوقة\n` +
-        `${DOT} وصول حصري للأعضاء\n\n` +
+    : `${head(`${BOT_NAME} · النخبة`, "نادي الإشارات الخاص VIP")}` +
+        `💎 أهلاً بك يا <b>${safe}</b>\n\n` +
+        `🤖 ${DOT} <b>إشارات لحظية بالذكاء الاصطناعي</b> — على مدار الساعة\n` +
+        `🎯 ${DOT} <b>دقة موثوقة</b> — يتم اختبارها يوميًا\n` +
+        `🔐 ${DOT} <b>حصري للأعضاء</b> — وصول خاص\n` +
+        `⚡️ ${DOT} <b>دعم فوري</b> — بضغطة واحدة\n\n` +
         `${SOFT}\n<i>اختر لغتك للمتابعة.</i>`;
 }
 
 const LANG_CAPTION =
-  `<b>Language · اللغة</b>\n${RULE}\n` +
-  `Choose your preferred language.\n` +
-  `اختر لغتك المفضّلة.`;
+  `🌐 <b>Language · اللغة</b>\n${RULE}\n` +
+  `<i>Choose your preferred language.</i>\n` +
+  `<i>اختر لغتك المفضّلة للمتابعة.</i>`;
+
 
 function copy(lang: Lang, promoCode: string) {
   const base = T[lang];
