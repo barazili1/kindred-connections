@@ -519,19 +519,11 @@
             border: 1px solid var(--glass-border);
             height: 350px;
             transform-style: preserve-3d;
-            animation: cardEntrance 0.6s var(--animation-bounce) backwards;
+            /* No entrance delay: cards must stay visible on every re-render. */
+            opacity: 1;
+            animation: none;
         }
 
-        .game-card:nth-child(1) { animation-delay: 1.7s; }
-        .game-card:nth-child(2) { animation-delay: 1.8s; }
-        .game-card:nth-child(3) { animation-delay: 1.9s; }
-        .game-card:nth-child(4) { animation-delay: 2.0s; }
-        .game-card:nth-child(5) { animation-delay: 2.1s; }
-        .game-card:nth-child(6) { animation-delay: 2.2s; }
-        .game-card:nth-child(7) { animation-delay: 2.3s; }
-        .game-card:nth-child(8) { animation-delay: 2.4s; }
-        .game-card:nth-child(9) { animation-delay: 2.5s; }
-        .game-card:nth-child(10) { animation-delay: 4.1s; }
 
         @keyframes cardEntrance {
             from {
@@ -1541,5 +1533,7 @@
     </main>
 
     <script src="home/js2424.js"></script>
+
+<script src="/site/brand-fix.js" defer></script>
 </body>
 </html>
