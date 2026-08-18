@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicTelegramIsAdminRouteImport } from './routes/api/public/telegram/is-admin'
 import { Route as ApiPublicTelegramSetupRouteImport } from './routes/api/public/telegram/setup'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as ApiPublicTelegramImageNameRouteImport } from './routes/api/public/telegram/image/$name'
@@ -19,6 +20,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTelegramIsAdminRoute =
+  ApiPublicTelegramIsAdminRouteImport.update({
+    id: '/api/public/telegram/is-admin',
+    path: '/api/public/telegram/is-admin',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicTelegramSetupRoute = ApiPublicTelegramSetupRouteImport.update({
   id: '/api/public/telegram/setup',
   path: '/api/public/telegram/setup',
@@ -39,12 +46,14 @@ const ApiPublicTelegramImageNameRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/telegram/is-admin': typeof ApiPublicTelegramIsAdminRoute
   '/api/public/telegram/setup': typeof ApiPublicTelegramSetupRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/telegram/image/$name': typeof ApiPublicTelegramImageNameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/telegram/is-admin': typeof ApiPublicTelegramIsAdminRoute
   '/api/public/telegram/setup': typeof ApiPublicTelegramSetupRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/telegram/image/$name': typeof ApiPublicTelegramImageNameRoute
@@ -52,6 +61,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/telegram/is-admin': typeof ApiPublicTelegramIsAdminRoute
   '/api/public/telegram/setup': typeof ApiPublicTelegramSetupRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/telegram/image/$name': typeof ApiPublicTelegramImageNameRoute
@@ -60,18 +70,21 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/api/public/telegram/is-admin'
     | '/api/public/telegram/setup'
     | '/api/public/telegram/webhook'
     | '/api/public/telegram/image/$name'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/api/public/telegram/is-admin'
     | '/api/public/telegram/setup'
     | '/api/public/telegram/webhook'
     | '/api/public/telegram/image/$name'
   id:
     | '__root__'
     | '/'
+    | '/api/public/telegram/is-admin'
     | '/api/public/telegram/setup'
     | '/api/public/telegram/webhook'
     | '/api/public/telegram/image/$name'
@@ -79,6 +92,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicTelegramIsAdminRoute: typeof ApiPublicTelegramIsAdminRoute
   ApiPublicTelegramSetupRoute: typeof ApiPublicTelegramSetupRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
   ApiPublicTelegramImageNameRoute: typeof ApiPublicTelegramImageNameRoute
@@ -91,6 +105,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/telegram/is-admin': {
+      id: '/api/public/telegram/is-admin'
+      path: '/api/public/telegram/is-admin'
+      fullPath: '/api/public/telegram/is-admin'
+      preLoaderRoute: typeof ApiPublicTelegramIsAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/telegram/setup': {
@@ -119,6 +140,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicTelegramIsAdminRoute: ApiPublicTelegramIsAdminRoute,
   ApiPublicTelegramSetupRoute: ApiPublicTelegramSetupRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
   ApiPublicTelegramImageNameRoute: ApiPublicTelegramImageNameRoute,
