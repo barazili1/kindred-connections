@@ -1,38 +1,14 @@
-/* Apple of Fortune — predictions driven by Firebase RTDB (path /m11) */
+/* Apple of Fortune — original design, predictions driven by Firebase RTDB (/m11) */
 (function () {
   const DB = 'https://x-men-256cc-default-rtdb.firebaseio.com/m11.json';
+  const IMG = 'https://i.ibb.co/hBdQrHp/IMG-20241125-133222-422.jpg';
   const ROWS = 10;
   const COLS = 5;
-  // number of rotten apples per row (row 1 = bottom = m1..m5)
+  // rotten apples per row (row 1 = m1..m5 = bottom row in the game grid)
   const BAD_PER_ROW = [1, 1, 1, 1, 2, 2, 2, 3, 3, 4];
 
   const $ = (id) => document.getElementById(id);
-
-  function keyIndex(row, col) { return (row - 1) * COLS + col; } // 1..50
-
-  function buildGrid() {
-    const container = $('circleContainer');
-    if (!container) return;
-    container.innerHTML = '';
-    for (let row = ROWS; row >= 1; row--) {
-      const div = document.createElement('div');
-      div.className = 'circle-row';
-      div.dataset['row'] = String(row);
-      div.style.animation = 'none';
-      for (let col = 1; col <= COLS; col++) {
-        const c = document.createElement('div');
-        c.className = 'circle';
-        c.dataset['key'] = 'm' + keyIndex(row, col);
-        c.style.fontSize = '22px';
-        div.appendChild(c);
-      }
-      const num = document.createElement('span');
-      num.className = 'row-number';
-      num.textContent = String(row);
-      div.appendChild(num);
-      container.appendChild(div);
-    }
-  }
+  const keyIndex = (row, col) => (row - 1) * COLS + col;
 
   function showAlert(msg) {
     const box = $('alertBox');
@@ -56,23 +32,26 @@
     return out;
   }
 
-  function paintRow(row, values) {
-    document.querySelectorAll('.circle-row[data-row="' + row + '"] .circle').forEach((el) => {
-      const bad = values[el.dataset['key']] === 1;
-      el.textContent = bad ? '❌' : '🍏';
-      el.style.background = bad
-        ? 'rgba(255, 77, 77, 0.25)'
-        : 'rgba(60, 220, 120, 0.25)';
-      el.style.boxShadow = bad ? 'none' : '0 0 12px rgba(60,220,120,0.5)';
-    });
-  }
-
-  function clearGrid() {
-    document.querySelectorAll('#circleContainer .circle').forEach((el) => {
-      el.textContent = '';
-      el.style.background = 'rgba(255, 255, 255, 0.1)';
-      el.style.boxShadow = 'none';
-    });
+  function makeRow(row, safeCol) {
+    const div = document.createElement('div');
+    div.className = 'circle-row';
+    for (let col = 1; col <= COLS; col++) {
+      const c = document.createElement('div');
+      c.className = 'circle';
+      if (col === safeCol) {
+        const img = document.createElement('img');
+        img.src = IMG;
+        img.alt = 'Prediction Image';
+        img.style.display = 'block';
+        c.appendChild(img);
+      }
+      div.appendChild(c);
+    }
+    const num = document.createElement('span');
+    num.className = 'row-number';
+    num.textContent = String(row);
+    div.appendChild(num);
+    return div;
   }
 
   function randomPattern() {
@@ -106,7 +85,10 @@
   }
 
   function init() {
-    buildGrid();
+    const container = $('circleContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
     let currentRow = 0;
     let values = null;
 
@@ -122,7 +104,12 @@
       try {
         if (!values) values = await fetchPredictions();
         currentRow += 1;
-        paintRow(currentRow, values);
+        const safe = [];
+        for (let col = 1; col <= COLS; col++) {
+          if (values['m' + keyIndex(currentRow, col)] === 0) safe.push(col);
+        }
+        const pick = safe.length ? safe[Math.floor(Math.random() * safe.length)] : 0;
+        container.appendChild(makeRow(currentRow, pick));
       } catch (e) {
         showAlert('تعذر جلب التوقعات، حاول مرة أخرى');
       } finally {
@@ -133,11 +120,10 @@
     if (resetBtn) resetBtn.addEventListener('click', async () => {
       setLoading(true);
       try {
-        const payload = randomPattern();
-        await writePattern(payload);
+        await writePattern(randomPattern());
         values = null;
         currentRow = 0;
-        clearGrid();
+        container.innerHTML = '';
         showAlert('تم تحديث التوقعات');
       } catch (e) {
         showAlert('تعذر إعادة التعيين، حاول مرة أخرى');
