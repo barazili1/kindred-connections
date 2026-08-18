@@ -35,7 +35,9 @@
     }
     // Avoid two tabs sharing the exact same label.
     var other = document.getElementById("tab-other");
-    if (other && other.textContent.trim() === "رهانات أخرى") other.textContent = "رهانات متنوعة";
+    if (other && other.textContent.indexOf("رهانات أخرى") === 0) {
+      other.textContent = other.textContent.replace("رهانات أخرى", "رهانات متنوعة");
+    }
   }
 
   function start() {
