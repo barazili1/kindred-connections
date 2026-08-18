@@ -363,6 +363,7 @@ async function sendVerified(chatId: number, lang: Lang, settings: BotSettings, i
 
 type EditableField =
   | "channel_url"
+  | "channel_chat_id"
   | "support_url"
   | "platform_1_url"
   | "platform_2_url"
@@ -375,6 +376,7 @@ type EditableField =
 
 const FIELD_LABEL: Record<EditableField, string> = {
   channel_url: "رابط قناة التليجرام",
+  channel_chat_id: "معرّف القناة (-100…) أو @اسم_القناة",
   support_url: "رابط الدعم",
   platform_1_url: `رابط تحميل ${PLATFORMS.p1.name}`,
   platform_2_url: `رابط تحميل ${PLATFORMS.p2.name}`,
