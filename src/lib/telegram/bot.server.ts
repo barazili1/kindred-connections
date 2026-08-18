@@ -223,9 +223,10 @@ function copy(lang: Lang, promoCode: string) {
         : `سجّل حساب <b>جديد</b> بالكود التالي:\n\n<code>${escape(promoCode)}</code>\n\n<i>اضغط على الكود لنسخه.</i>`,
       lang,
     ),
-    copy: lang === "en" ? `Copy code · ${promoCode}` : `نسخ الكود · ${promoCode}`,
+    copy: lang === "en" ? `🎁 Copy code · ${promoCode}` : `🎁 نسخ الكود · ${promoCode}`,
     copied:
-      lang === "en" ? `Promo code ${promoCode} copied ✓` : `تم نسخ البروموكود ${promoCode} ✓`,
+      lang === "en" ? `✅ Promo code ${promoCode} copied` : `✅ تم نسخ البروموكود ${promoCode}`,
+
     base,
   };
 }
