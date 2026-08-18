@@ -156,26 +156,26 @@ const answerCallback = (id: string, text?: string, alert = false) =>
 
 /* --------------------------------- design -------------------------------- */
 
-/** Hairline divider — reads cleanly in both RTL and LTR. */
-const RULE = "━━━━━━━━━━━━━━━━━━━";
-const SOFT = "──────────────────";
-const DOT = "•";
+/** Luxury dividers — read cleanly in both RTL and LTR. */
+const RULE = "▬▬▬▬▬▬▬ ✦ ▬▬▬▬▬▬▬";
+const SOFT = "─── ⋅ ✧ ⋅ ───";
+const DOT = "◆";
 
-/** Progress bar: ●●●○○ */
+/** Progress bar: ◆◆◆◇◇ */
 function bar(step: number, total = 5) {
-  return "●".repeat(step) + "○".repeat(total - step);
+  return "🔸".repeat(step) + "▫️".repeat(total - step);
 }
 
 function escape(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-/** Minimal, modern header block used by every message. */
+/** Premium header block used by every message. */
 function head(title: string, subtitle?: string) {
   return (
-    `<b>${title}</b>\n` +
+    `👑 <b>${title}</b> 👑\n` +
     `${RULE}\n` +
-    (subtitle ? `<i>${subtitle}</i>\n\n` : "\n")
+    (subtitle ? `<i>✨ ${subtitle}</i>\n\n` : "\n")
   );
 }
 
@@ -183,6 +183,7 @@ function card(step: number, label: string, body: string, lang: Lang) {
   const progress = lang === "en" ? `Step ${step} / 5` : `الخطوة ${step} من 5`;
   return `${head(label)}${bar(step)}   <b>${progress}</b>\n\n${body}`;
 }
+
 
 /* ---------------------------------- copy --------------------------------- */
 
