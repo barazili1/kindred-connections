@@ -622,6 +622,16 @@ export async function handleUpdate(update: any) {
       if (parts[1] === "on" || parts[1] === "off") {
         await updateBotSettings({ enabled: parts[1] === "on" });
         await answerCallback(cb.id, parts[1] === "on" ? "تم تشغيل البوت" : "تم إيقاف البوت");
+      } else if (parts[1] === "toggle") {
+        const pk = (parts[2] ?? "") as PlatformKey;
+        if (pk in PLATFORMS) {
+          const next = !settings.platformEnabled[pk];
+          const column = `platform_${pk.slice(1)}_enabled`;
+          await updateBotSettings({ [column]: next } as any);
+          await answerCallback(cb.id, next ? `تم تفعيل ${PLATFORMS[pk].name}` : `تم إخفاء ${PLATFORMS[pk].name}`);
+        } else {
+          await answerCallback(cb.id);
+        }
       } else if (parts[1] === "help") {
         await answerCallback(cb.id);
         await sendMessage(chatId, ADMIN_HELP);
