@@ -585,7 +585,7 @@ export async function handleUpdate(update: any) {
 
 
     if (action === "admin") {
-      if (!isAdmin(cb.from?.id)) {
+      if (!(await isAdmin(cb.from?.id))) {
         await answerCallback(cb.id, "غير مصرح");
         return;
       }
@@ -676,7 +676,7 @@ export async function handleUpdate(update: any) {
   if (!chatId) return;
   const text = String(msg.text ?? "").trim();
 
-  if (isAdmin(msg.from?.id)) {
+  if (await isAdmin(msg.from?.id)) {
     if (text === "/admin" || text === "/panel") {
       await sendAdminPanel(chatId, settings);
       return;
@@ -689,7 +689,7 @@ export async function handleUpdate(update: any) {
     if (await handleAdminCommand(chatId, text)) return;
   }
 
-  if (!settings.enabled && !isAdmin(msg.from?.id)) return;
+  if (!settings.enabled && !(await isAdmin(msg.from?.id))) return;
 
   if (text.startsWith("/start")) {
     const name = msg.from?.first_name ?? "Player";
@@ -701,7 +701,7 @@ export async function handleUpdate(update: any) {
         { text: "🇸🇦 العربية", callback_data: "lang:ar" },
       ],
     ]);
-    if (isAdmin(msg.from?.id)) await sendAdminPanel(chatId, settings);
+    if (await isAdmin(msg.from?.id)) await sendAdminPanel(chatId, settings);
     return;
   }
 
