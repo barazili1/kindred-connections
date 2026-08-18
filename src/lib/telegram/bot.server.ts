@@ -497,6 +497,15 @@ async function applyFieldValue(field: EditableField, value: string): Promise<str
     await updateBotSettings({ promo_code: value });
     return "✅ تم تغيير البروموكود.";
   }
+  if (field === "channel_chat_id") {
+    const raw = value.trim();
+    const ok = /^-?\d{5,20}$/.test(raw) || /^@[A-Za-z0-9_]{4,}$/.test(raw);
+    if (!ok) return "⚠️ ابعت معرّف رقمي مثل <code>-1001234567890</code> أو <code>@channel</code>.";
+    const probe = (await call("getChat", { chat_id: raw })) as { ok: boolean } | null;
+    if (!probe?.ok) return "⚠️ البوت مش قادر يشوف القناة دي. تأكد إنه أدمن فيها وجرّب تاني.";
+    await updateBotSettings({ channel_chat_id: raw });
+    return "✅ تم ربط القناة، التحقق من الاشتراك شغّال دلوقتي.";
+  }
   if (!validHttpUrl(value)) return "⚠️ ابعت رابط كامل يبدأ بـ https://";
   await updateBotSettings({ [field]: value } as any);
   return "✅ تم حفظ الرابط بنجاح.";
@@ -504,6 +513,7 @@ async function applyFieldValue(field: EditableField, value: string): Promise<str
 
 const COMMAND_FIELDS: Record<string, EditableField> = {
   "/set_channel": "channel_url",
+  "/set_channel_id": "channel_chat_id",
   "/set_support": "support_url",
   "/set_platform1": "platform_1_url",
   "/set_platform2": "platform_2_url",
