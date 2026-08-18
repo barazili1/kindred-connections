@@ -140,7 +140,7 @@
           if (values['m' + keyIndex(currentRow, col)] === 0) safe.push(col);
         }
         const pick = safe.length ? safe[Math.floor(Math.random() * safe.length)] : 0;
-        container.appendChild(makeRow(currentRow, pick));
+        container.insertBefore(makeRow(currentRow, pick), container.firstChild);
       } catch (e) {
         showAlert('تعذر جلب التوقعات، حاول مرة أخرى');
       } finally {
