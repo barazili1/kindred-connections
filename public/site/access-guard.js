@@ -44,8 +44,30 @@
     } catch (e) {}
   }
 
+  function renew(onFail) {
+    var initData =
+      (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || "";
+    if (!initData) return onFail();
+    fetch("/api/public/telegram/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ initData: initData }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && d.ok && d.token) {
+          try {
+            sessionStorage.setItem(KEY, d.token);
+            localStorage.setItem(KEY, d.token);
+          } catch (e) {}
+          window.NOVA_USER_ID = d.userId || window.NOVA_USER_ID;
+        } else onFail();
+      })
+      .catch(onFail);
+  }
+
   if (!token) {
-    block();
+    renew(block);
     return;
   }
 
@@ -66,7 +88,7 @@
         window.NOVA_USER_ID = data.userId || window.NOVA_USER_ID;
       } else {
         style.remove();
-        block();
+        renew(block);
       }
     })
     .catch(function () {
