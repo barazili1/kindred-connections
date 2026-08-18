@@ -33,11 +33,12 @@ export function images() {
 export const APP_URL = "https://nova-vip-one.vercel.app";
 
 /** Link to the predictions site, carrying the player's platform ID. */
-export function appUrl(lang: Lang, id?: string, name?: string, configuredBaseUrl?: string | null) {
+export function appUrl(lang: Lang, id?: string, name?: string, configuredBaseUrl?: string | null, token?: string) {
   const params = new URLSearchParams({ lang: "ar" });
   params.set("us", name && name.trim() ? name.trim() : "Guest");
   params.set("i", id && /^\d{5,20}$/.test(id) ? id : "1");
   params.set("ui", lang);
+  if (token) params.set("tk", token);
   const base = configuredBaseUrl?.trim().replace(/\/+$/, "") || APP_URL;
   return `${base}/?${params.toString()}`;
 }

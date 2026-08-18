@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicTelegramIsAdminRouteImport } from './routes/api/public/telegram/is-admin'
 import { Route as ApiPublicTelegramSetupRouteImport } from './routes/api/public/telegram/setup'
+import { Route as ApiPublicTelegramVerifyAccessRouteImport } from './routes/api/public/telegram/verify-access'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as ApiPublicTelegramImageNameRouteImport } from './routes/api/public/telegram/image/$name'
 
@@ -31,6 +32,12 @@ const ApiPublicTelegramSetupRoute = ApiPublicTelegramSetupRouteImport.update({
   path: '/api/public/telegram/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTelegramVerifyAccessRoute =
+  ApiPublicTelegramVerifyAccessRouteImport.update({
+    id: '/api/public/telegram/verify-access',
+    path: '/api/public/telegram/verify-access',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicTelegramWebhookRoute =
   ApiPublicTelegramWebhookRouteImport.update({
     id: '/api/public/telegram/webhook',
@@ -48,6 +55,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/public/telegram/is-admin': typeof ApiPublicTelegramIsAdminRoute
   '/api/public/telegram/setup': typeof ApiPublicTelegramSetupRoute
+  '/api/public/telegram/verify-access': typeof ApiPublicTelegramVerifyAccessRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/telegram/image/$name': typeof ApiPublicTelegramImageNameRoute
 }
@@ -55,6 +63,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/public/telegram/is-admin': typeof ApiPublicTelegramIsAdminRoute
   '/api/public/telegram/setup': typeof ApiPublicTelegramSetupRoute
+  '/api/public/telegram/verify-access': typeof ApiPublicTelegramVerifyAccessRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/telegram/image/$name': typeof ApiPublicTelegramImageNameRoute
 }
@@ -63,6 +72,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/api/public/telegram/is-admin': typeof ApiPublicTelegramIsAdminRoute
   '/api/public/telegram/setup': typeof ApiPublicTelegramSetupRoute
+  '/api/public/telegram/verify-access': typeof ApiPublicTelegramVerifyAccessRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/telegram/image/$name': typeof ApiPublicTelegramImageNameRoute
 }
@@ -72,6 +82,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api/public/telegram/is-admin'
     | '/api/public/telegram/setup'
+    | '/api/public/telegram/verify-access'
     | '/api/public/telegram/webhook'
     | '/api/public/telegram/image/$name'
   fileRoutesByTo: FileRoutesByTo
@@ -79,6 +90,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api/public/telegram/is-admin'
     | '/api/public/telegram/setup'
+    | '/api/public/telegram/verify-access'
     | '/api/public/telegram/webhook'
     | '/api/public/telegram/image/$name'
   id:
@@ -86,6 +98,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api/public/telegram/is-admin'
     | '/api/public/telegram/setup'
+    | '/api/public/telegram/verify-access'
     | '/api/public/telegram/webhook'
     | '/api/public/telegram/image/$name'
   fileRoutesById: FileRoutesById
@@ -94,6 +107,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiPublicTelegramIsAdminRoute: typeof ApiPublicTelegramIsAdminRoute
   ApiPublicTelegramSetupRoute: typeof ApiPublicTelegramSetupRoute
+  ApiPublicTelegramVerifyAccessRoute: typeof ApiPublicTelegramVerifyAccessRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
   ApiPublicTelegramImageNameRoute: typeof ApiPublicTelegramImageNameRoute
 }
@@ -121,6 +135,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTelegramSetupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/telegram/verify-access': {
+      id: '/api/public/telegram/verify-access'
+      path: '/api/public/telegram/verify-access'
+      fullPath: '/api/public/telegram/verify-access'
+      preLoaderRoute: typeof ApiPublicTelegramVerifyAccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/telegram/webhook': {
       id: '/api/public/telegram/webhook'
       path: '/api/public/telegram/webhook'
@@ -142,6 +163,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiPublicTelegramIsAdminRoute: ApiPublicTelegramIsAdminRoute,
   ApiPublicTelegramSetupRoute: ApiPublicTelegramSetupRoute,
+  ApiPublicTelegramVerifyAccessRoute: ApiPublicTelegramVerifyAccessRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
   ApiPublicTelegramImageNameRoute: ApiPublicTelegramImageNameRoute,
 }
