@@ -632,6 +632,13 @@ export async function handleUpdate(update: any) {
         } else {
           await answerCallback(cb.id);
         }
+      } else if (parts[1] === "edit") {
+        const field = (parts[2] ?? "") as EditableField;
+        await answerCallback(cb.id);
+        if (field in FIELD_LABEL) {
+          await askForValue(chatId, field);
+          return;
+        }
       } else if (parts[1] === "help") {
         await answerCallback(cb.id);
         await sendMessage(chatId, ADMIN_HELP);
