@@ -40,7 +40,8 @@ export function appUrl(lang: Lang, id?: string, name?: string, configuredBaseUrl
   params.set("ui", lang);
   if (token) params.set("tk", token);
   const base = configuredBaseUrl?.trim().replace(/\/+$/, "") || APP_URL;
-  return `${base}/?${params.toString()}`;
+  const sep = /\.html?$/i.test(base) ? "?" : "/?";
+  return `${base}${sep}${params.toString()}`;
 }
 
 /** Telegram channel users must join. */

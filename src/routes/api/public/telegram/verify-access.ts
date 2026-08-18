@@ -7,10 +7,18 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/api/public/telegram/verify-access")({
   server: {
     handlers: {
+      OPTIONS: async () =>
+        new Response(null, {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+          },
+        }),
       GET: async ({ request }) => {
         const url = new URL(request.url);
         const tk = url.searchParams.get("tk");
-        let result: { ok: boolean; userId?: string } = { ok: false };
+        let result: { ok: boolean; userId?: string | undefined } = { ok: false };
         try {
           const { verifyAccessToken } = await import("@/lib/telegram/access.server");
           result = verifyAccessToken(tk);
@@ -18,7 +26,9 @@ export const Route = createFileRoute("/api/public/telegram/verify-access")({
           result = { ok: false };
         }
         return new Response(JSON.stringify(result), {
-          headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+          headers: { "Content-Type": "application/json",
+            "Cache-Control": "no-store",
+            "Access-Control-Allow-Origin": "*" },
         });
       },
     },

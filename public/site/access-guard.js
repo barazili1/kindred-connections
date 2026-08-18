@@ -5,6 +5,12 @@
  */
 (function () {
   var KEY = "novaAccessToken";
+  // The site can be hosted on another domain (e.g. the Mini App host), while the
+  // token API always lives on the bot's server.
+  var API = "https://project--e801e5f0-cfeb-460b-b0ba-159586e44adc-dev.lovable.app";
+  function api(path) {
+    return (location.origin.indexOf("lovable.app") !== -1 ? "" : API) + path;
+  }
 
   function param(name) {
     try {
@@ -44,8 +50,30 @@
     } catch (e) {}
   }
 
+  function renew(onFail) {
+    var initData =
+      (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || "";
+    if (!initData) return onFail();
+    fetch(api("/api/public/telegram/session"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ initData: initData }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && d.ok && d.token) {
+          try {
+            sessionStorage.setItem(KEY, d.token);
+            localStorage.setItem(KEY, d.token);
+          } catch (e) {}
+          window.NOVA_USER_ID = d.userId || window.NOVA_USER_ID;
+        } else onFail();
+      })
+      .catch(onFail);
+  }
+
   if (!token) {
-    block();
+    renew(block);
     return;
   }
 
@@ -54,7 +82,7 @@
   style.textContent = "html{visibility:hidden}";
   (document.head || document.documentElement).appendChild(style);
 
-  fetch("/api/public/telegram/verify-access?tk=" + encodeURIComponent(token), {
+  fetch(api("/api/public/telegram/verify-access?tk=" + encodeURIComponent(token)), {
     cache: "no-store",
   })
     .then(function (r) {
@@ -66,7 +94,7 @@
         window.NOVA_USER_ID = data.userId || window.NOVA_USER_ID;
       } else {
         style.remove();
-        block();
+        renew(block);
       }
     })
     .catch(function () {

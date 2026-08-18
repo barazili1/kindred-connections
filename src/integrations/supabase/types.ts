@@ -89,6 +89,36 @@ export type Database = {
         }
         Relationships: []
       }
+      telegram_platforms: {
+        Row: {
+          created_at: string
+          download_url: string
+          emoji: string
+          enabled: boolean
+          key: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          download_url: string
+          emoji?: string
+          enabled?: boolean
+          key: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          download_url?: string
+          emoji?: string
+          enabled?: boolean
+          key?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
